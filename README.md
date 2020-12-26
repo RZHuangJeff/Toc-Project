@@ -19,9 +19,9 @@ There are three main options valiable for this system.
 
 For the description of different parts goes here:
 
-* [Access Control System](#Access\ Control\ System)
-* [Http Server](#Http\ Server)
-* [Json Parser](#Json\ Parser)
+* [Access Control System](#Access-Control-System)
+* [Http Server](#Http-Server)
+* [Json Parser](#Json-Parser)
 
 ## Compilation & Execution
 * Compile: ```make```
