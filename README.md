@@ -4,11 +4,8 @@
 This is the project for the TOC class. This project is a http server made for interfacing with Line Message API. The main purpose of this project is to make a access control system that can be triggered via chatting with the Linebot.
 
 Following is the finite state machine diagram of the system. The code that defines such finite state machine is at [here](https://github.com/RZHuangJeff/Toc-Project/blob/main/ac_sys/ac_sys.c#L49).
-```graphviz
-digraph{
 
-}
-```
+![](https://github.com/RZHuangJeff/Toc-Project/blob/main/ac_sys_fsm_diag.png)
 
 There are three main options valiable for this system.
 
