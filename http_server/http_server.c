@@ -114,7 +114,7 @@ static void conn_reciv(const long fd){
     
     http_server_send_response((http_response_t*)response);
     http_free_request(request);
-    http_free_resopnse((http_request_t*)response);
+    http_free_resopnse((http_response_t*)response);
 }
 
 static http_request_t *init_http_request(const int fd){

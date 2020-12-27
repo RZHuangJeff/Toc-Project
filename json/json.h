@@ -38,8 +38,8 @@ typedef struct {
     json_type_t type;
 
     union {
-        char *str_tag;
-        double num_tag;
+        const char *str_tag;
+        const double num_tag;
     } tag;
 }json_tag_t;
 
