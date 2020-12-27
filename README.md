@@ -23,6 +23,8 @@ The description of different parts goes here:
 * Compile: ```make```
 * Execute: ```./main```
 
+**NOTICE**: before you run the program, you have to set the ***secret key*** and ***access token*** of the line message api to the environment variables and should be named as **LINE_CHANNEL_SECRET_KEY** and **LINE_CHANNEL_ACCESS_TOKEN** respectively.
+
 If you are running this project on the server that doesn't have a public IP, maybe you will need something like [ngrok](https://ngrok.com/).
 
 ## Access Control System
