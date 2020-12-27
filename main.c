@@ -11,7 +11,7 @@
 #include "ac_sys/ac_sys.h"
 #include "http_server/http_server.h"
 
-char *secret = "2499887e4b42f4f1df509fce4cce6dcc";
+char *secret, *actoken;
 EVP_MAC_CTX *evp_mac_ctx;
 
 void evp_ctx_init();
@@ -39,6 +39,9 @@ void share_pick_period(char *userid, void *arg);
 void share_success(char *userid, void *arg);
 
 int main(){
+    secret = getenv("LINE_CHANNEL_SECRET_KEY");
+    actoken = getenv("LINE_CHANNEL_ACCESS_TOKEN");
+    
     evp_ctx_init();
 
     ac_sys_init();
@@ -144,9 +147,10 @@ void do_reply_msg(const char *userid, const char *message){
     size_t uid_len = strlen(userid);
     size_t msg_len = strlen(message);
 
-    char content[uid_len + msg_len + 50];
+    char content[uid_len + msg_len + 50], header[200];
 
     sprintf(content, "{\"to\":\"%s\",\"messages\":[{\"type\":\"text\",\"text\":\"%s\"}]}", userid, message);
+    sprintf(header, "Authorization: Bearer %s", actoken);
 
     char *argv[] = {
         "curl",
@@ -157,7 +161,7 @@ void do_reply_msg(const char *userid, const char *message){
         "-H",
         "Content-Type: application/json",
         "-H",
-        "Authorization: Bearer On8wOfAIIq5+/MXSVdwLhkiZ0St2pgL+ZRk8iRIUbJqtqZ1BNQaeRS8Z9laQrKfaQ3+4+muFo4bbrZfj5tNknOYg+p0Nd3uO4Ma9ACocIPQABEKfET3M/MenoDUaJVYULh0lFfR16G9JJTV7cKY3xgdB04t89/1O/w1cDnyilFU=",
+        header,
         "-d",
         content,
         NULL
@@ -177,9 +181,10 @@ void do_reply_flex(const char *userid, json_ele_t *flex){
     size_t uid_len = strlen(userid);
     size_t msg_len = json_get_str_length(flex);
 
-    char content[uid_len + msg_len + 70];
+    char content[uid_len + msg_len + 70], header[200];
 
     sprintf(content, "{\"to\":\"%s\",\"messages\":[{\"type\":\"flex\",\"altText\":\"flex\",\"contents\":%s}]}", userid, json_to_string(flex));
+    sprintf(header, "Authorization: Bearer %s", actoken);
 
     char *argv[] = {
         "curl",
@@ -190,7 +195,7 @@ void do_reply_flex(const char *userid, json_ele_t *flex){
         "-H",
         "Content-Type: application/json",
         "-H",
-        "Authorization: Bearer On8wOfAIIq5+/MXSVdwLhkiZ0St2pgL+ZRk8iRIUbJqtqZ1BNQaeRS8Z9laQrKfaQ3+4+muFo4bbrZfj5tNknOYg+p0Nd3uO4Ma9ACocIPQABEKfET3M/MenoDUaJVYULh0lFfR16G9JJTV7cKY3xgdB04t89/1O/w1cDnyilFU=",
+        header,
         "-d",
         content,
         NULL
