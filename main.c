@@ -11,8 +11,10 @@
 #include "ac_sys/ac_sys.h"
 #include "http_server/http_server.h"
 
-const char *secret = "2499887e4b42f4f1df509fce4cce6dcc";
+char *secret = "2499887e4b42f4f1df509fce4cce6dcc";
+EVP_MAC_CTX *evp_mac_ctx;
 
+void evp_ctx_init();
 bool check_signature(const char *ver, const char *body);
 void do_reply_msg(const char *userid, const char *message);
 void do_reply_flex(const char *userid, json_ele_t *flex);
@@ -37,6 +39,8 @@ void share_pick_period(char *userid, void *arg);
 void share_success(char *userid, void *arg);
 
 int main(){
+    evp_ctx_init();
+
     ac_sys_init();
     ac_sys_add_cback(REG_FIRST_USE, first_use);
     ac_sys_add_cback(REG_VALID_NAME, valid_name);
@@ -60,6 +64,18 @@ int main(){
     http_server_run();
 
     return 0;
+}
+
+void evp_ctx_init(){
+    EVP_MAC *evp_mac = EVP_MAC_fetch(NULL, "HMAC", NULL);
+    evp_mac_ctx = EVP_MAC_CTX_new(evp_mac);
+
+    OSSL_PARAM parms[] = {
+        {"digest", OSSL_PARAM_UTF8_STRING, "SHA-256", 0, 0},
+        {"key", OSSL_PARAM_OCTET_STRING, secret, strlen(secret), 0},
+        OSSL_PARAM_END
+    };
+    EVP_MAC_CTX_set_params(evp_mac_ctx, parms);
 }
 
 void post_root(http_request_t *req, http_response_t *res){
@@ -96,26 +112,32 @@ void post_root(http_request_t *req, http_response_t *res){
 }
 
 bool check_signature(const char *ver, const char *body){
-    unsigned char md[512], *result, buff[512];
-    size_t len;
+    unsigned char result[512], buff[512];
+    size_t out_size;
+    bool pass = false;
 
-    result = HMAC(EVP_sha256(), secret, strlen(secret), body, strlen(body), md, &len);
-    if(result){
+    EVP_MAC_CTX *ctx = EVP_MAC_CTX_dup(evp_mac_ctx);
+
+    EVP_MAC_init(ctx);
+    EVP_MAC_update(ctx, body, strlen(body));
+
+    if(EVP_MAC_final(ctx, result, &out_size, 512)){
         BIO *b64, *bio;
         FILE *fp = fmemopen(buff, 512, "w");
 
         b64 = BIO_new(BIO_f_base64());
         bio = BIO_new_fp(fp, BIO_CLOSE);
         BIO_push(b64, bio);
-        BIO_write(b64, result, len);
+        BIO_write(b64, result, out_size);
         BIO_flush(b64);
         BIO_free(bio);
         BIO_free(b64);
 
-        return !strncmp(ver, buff, strlen(ver));
+        pass = !strncmp(ver, buff, strlen(ver));
     }
-    else
-        return false;
+
+    EVP_MAC_CTX_free(ctx);
+    return pass;
 }
 
 void do_reply_msg(const char *userid, const char *message){
@@ -143,10 +165,6 @@ void do_reply_msg(const char *userid, const char *message){
 
     pid_t pid;
     if(!(pid = fork())){
-        int fd = open("/dev/null");
-
-        dup2(fd, STDOUT_FILENO);
-        dup2(fd, STDERR_FILENO);
         execv("/bin/curl", argv);
     }
     else if(pid != -1){
